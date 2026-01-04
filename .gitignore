@@ -1,0 +1,5 @@
+piper_tts/
+reader.log
+venv/
+__pycache__/
+*.pyc

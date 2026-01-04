@@ -11,7 +11,7 @@ import threading
 import evdev
 import re
 import os
-from gtts import gTTS
+import shutil
 
 # --- CONFIGURATION ---
 CHECK_INTERVAL = 1.5
@@ -20,6 +20,11 @@ LANG = 'fra'
 SIMILARITY_THRESHOLD = 0.5
 CONTROLLER_PATH = '/dev/input/event17' # Votre Zikway HID gamepad
 TOGGLE_BUTTON_CODE = 314               # Le bouton que vous avez choisi
+
+# Chemins absolus pour Piper (nécessaire car lancé depuis venv parfois)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PIPER_BIN = os.path.join(BASE_DIR, "piper_tts/piper/piper")
+PIPER_MODEL = os.path.join(BASE_DIR, "piper_tts/fr_FR-upmc-medium.onnx")
 # ---------------------
 
 PAUSED = False
@@ -29,10 +34,15 @@ def toggle_pause():
     PAUSED = not PAUSED
     if PAUSED:
         print(">>> PAUSE ACTIVÉE", flush=True)
-        subprocess.Popen(['espeak-ng', '-v', 'fr', 'Pause'])
+        speak_system("Pause")
     else:
         print(">>> LECTURE ACTIVÉE", flush=True)
-        subprocess.Popen(['espeak-ng', '-v', 'fr', 'Lecture activée'])
+        speak_system("Lecture activée")
+
+def speak_system(text):
+    """Message système prioritaire (court)."""
+    # On utilise Piper aussi pour les messages système pour la cohérence
+    speak(text)
 
 def controller_listener():
     """Écoute la manette en arrière-plan."""
@@ -75,9 +85,8 @@ def capture_bottom_half(geo):
 def clean_text(text):
     # Remplace les retours à la ligne par des espaces
     text = text.replace('\n', ' ')
-    # Garde uniquement lettres, accents, ponctuation de base
-    # On enlève les chiffres (0-9) comme demandé
-    text = re.sub(r'[^a-zA-ZàâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ\s.,!?:;\'"-]', ' ', text)
+    # Garde lettres, accents, ponctuation de base ET chiffres
+    text = re.sub(r'[^a-zA-Z0-9àâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ\s.,!?:;\'"-]', ' ', text)
     # Réduit les espaces multiples
     text = re.sub(r'\s+', ' ', text)
     return text.strip()
@@ -86,13 +95,33 @@ def speak(text):
     def _speak_thread(t):
         try:
             print(f"PARLE: {t}", flush=True)
-            tts = gTTS(text=t, lang='fr')
-            filename = f"/tmp/gamereader_{int(time.time())}.mp3"
-            tts.save(filename)
-            subprocess.run(['mpv', '--no-terminal', filename])
-            os.remove(filename)
+            
+            # Méthode fichier temporaire (100% fiable)
+            # Les pipes causent trop de problèmes aléatoires avec mpv/aplay/paplay
+            # Piper est tellement rapide que l'écriture disque est négligeable
+            
+            filename = f"/tmp/gamereader_{int(time.time())}_{threading.get_ident()}.wav"
+            
+            # 1. Générer le fichier WAV avec Piper
+            with open(filename, 'wb') as f:
+                p_piper = subprocess.Popen(
+                    [PIPER_BIN, '--model', PIPER_MODEL, '--output_file', '-'],
+                    stdin=subprocess.PIPE,
+                    stdout=f,
+                    stderr=subprocess.DEVNULL
+                )
+                p_piper.communicate(input=t.encode('utf-8'))
+            
+            # 2. Jouer le fichier avec mpv (ou paplay)
+            if os.path.getsize(filename) > 0:
+                subprocess.run(['paplay', filename], stderr=subprocess.DEVNULL)
+            
+            # 3. Nettoyer
+            if os.path.exists(filename):
+                os.remove(filename)
+            
         except Exception as e:
-            print(f"Erreur TTS: {e}", flush=True)
+            print(f"Erreur TTS (Piper): {e}", flush=True)
 
     threading.Thread(target=_speak_thread, args=(text,), daemon=True).start()
 
