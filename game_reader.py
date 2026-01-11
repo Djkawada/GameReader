@@ -25,9 +25,91 @@ TOGGLE_BUTTON_CODE = 314               # Le bouton que vous avez choisi
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PIPER_BIN = os.path.join(BASE_DIR, "piper_tts/piper/piper")
 PIPER_MODEL = os.path.join(BASE_DIR, "piper_tts/fr_FR-upmc-medium.onnx")
+PROFILES_FILE = os.path.join(BASE_DIR, "profiles.json")
 # ---------------------
 
 PAUSED = False
+CURRENT_REGION = None # Si None, utilise le mode automatique (bas de l'écran actif)
+
+def load_profiles():
+    if not os.path.exists(PROFILES_FILE):
+        return {}
+    try:
+        with open(PROFILES_FILE, 'r') as f:
+            return json.load(f)
+    except:
+        return {}
+
+def save_profile(name, region):
+    profiles = load_profiles()
+    profiles[name] = region
+    with open(PROFILES_FILE, 'w') as f:
+        json.dump(profiles, f, indent=4)
+
+def select_zone_with_slurp():
+    print("Sélectionnez une zone à l'écran avec votre souris...", flush=True)
+    try:
+        # slurp permet de sélectionner une zone et retourne "x,y wxh"
+        # On ajoute -d pour ne pas lancer la commande si on annule
+        res = subprocess.run(['slurp', '-d'], capture_output=True, text=True)
+        if res.returncode == 0:
+            return res.stdout.strip()
+    except FileNotFoundError:
+        print("Erreur: 'slurp' n'est pas installé. Installez-le avec 'sudo pacman -S slurp'", flush=True)
+    except Exception as e:
+        print(f"Erreur lors de la sélection : {e}", flush=True)
+    return None
+
+def choose_profile_menu():
+    global CURRENT_REGION
+    
+    while True:
+        # On recharge les profils à chaque tour de boucle pour voir les nouveaux
+        profiles = load_profiles()
+        
+        print("\n=== MENU DE DÉMARRAGE ===")
+        print("1. Mode Auto (Bas de l'écran actif)")
+        
+        idx = 2
+        profile_names = list(profiles.keys())
+        for name in profile_names:
+            print(f"{idx}. Profil : {name}")
+            idx += 1
+            
+        print(f"{idx}. Créer un nouveau profil")
+        print("0. Quitter")
+        
+        try:
+            choice = input("\nVotre choix : ").strip()
+        except EOFError:
+            choice = "0"
+
+        if choice == "0":
+            sys.exit(0)
+        elif choice == "1":
+            CURRENT_REGION = None
+            print(">>> Mode Auto activé.")
+            break
+        elif choice == str(idx):
+            name = input("Nom du nouveau profil : ").strip()
+            if name:
+                region = select_zone_with_slurp()
+                if region:
+                    save_profile(name, region)
+                    print(f"Profil '{name}' sauvegardé !")
+                    # La boucle va recommencer et recharger les profils, donc le nouveau sera visible
+                else:
+                    print("Sélection annulée.")
+        else:
+            try:
+                sel_idx = int(choice) - 2
+                if 0 <= sel_idx < len(profile_names):
+                    name = profile_names[sel_idx]
+                    CURRENT_REGION = profiles[name]
+                    print(f">>> Profil '{name}' chargé ({CURRENT_REGION}).")
+                    break
+            except ValueError:
+                pass
 
 def toggle_pause():
     global PAUSED
@@ -67,19 +149,31 @@ def get_active_monitor_geometry():
     except Exception as e:
         return None
 
-def capture_bottom_half(geo):
-    x = geo['x']
-    y = geo['y'] + (geo['height'] // 2)
-    w = geo['width']
-    h = geo['height'] // 2
-    region = f"{int(x)},{int(y)} {int(w)}x{int(h)}"
-    try:
-        cmd = ['grim', '-g', region, '-t', 'png', '-']
-        res = subprocess.run(cmd, capture_output=True)
-        if res.returncode == 0:
-            return Image.open(io.BytesIO(res.stdout))
-    except:
-        pass
+def capture_zone():
+    region = None
+    
+    if CURRENT_REGION:
+        # Mode Profil Fixe
+        region = CURRENT_REGION
+    else:
+        # Mode Auto (Bas de l'écran)
+        geo = get_active_monitor_geometry()
+        if geo:
+            x = geo['x']
+            y = geo['y'] + (geo['height'] // 2)
+            w = geo['width']
+            h = geo['height'] // 2
+            region = f"{int(x)},{int(y)} {int(w)}x{int(h)}"
+    
+    if region:
+        try:
+            cmd = ['grim', '-g', region, '-t', 'png', '-']
+            # On supprime les erreurs stderr pour éviter le spam si grim échoue (ex: écran verrouillé)
+            res = subprocess.run(cmd, capture_output=True)
+            if res.returncode == 0:
+                return Image.open(io.BytesIO(res.stdout))
+        except:
+            pass
     return None
 
 def clean_text(text):
@@ -128,6 +222,8 @@ def speak(text):
 def main():
     print("=== GAMEREADER AVEC MANETTE ===", flush=True)
     
+    choose_profile_menu()
+    
     # Lancement de l'écoute manette dans un thread séparé
     thread = threading.Thread(target=controller_listener, daemon=True)
     thread.start()
@@ -140,12 +236,9 @@ def main():
                 time.sleep(0.5)
                 continue
 
-            geo = get_active_monitor_geometry()
-            if not geo:
-                time.sleep(1)
-                continue
-                
-            img = capture_bottom_half(geo)
+            # Capture selon le mode choisi (Zone fixe ou Auto)
+            img = capture_zone()
+            
             if img:
                 text = pytesseract.image_to_string(img.convert('L'), lang=LANG)
                 cleaned = clean_text(text)

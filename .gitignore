@@ -3,3 +3,4 @@ reader.log
 venv/
 __pycache__/
 *.pyc
+profiles.json
