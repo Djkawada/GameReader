@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=GameVox
+Comment=Lecteur d'écran intelligent pour le jeu (OCR + Piper TTS)
+Exec=alacritty -e gamevox
+Icon=utilities-terminal
+Terminal=false
+Type=Application
+Categories=Utility;Accessibility;Game;
+Keywords=ocr;tts;game;voice;reader;

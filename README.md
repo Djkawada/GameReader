@@ -1,6 +1,6 @@
-# GameReader 🎮🗣️
+# GameVox 🎮🗣️
 
-Un lecteur d'écran intelligent pour Linux (**Hyprland/Wayland**) conçu pour les jeux vidéo. 
+**GameVox** (anciennement GameReader) est un lecteur d'écran intelligent pour Linux (**Hyprland/Wayland**) conçu pour les jeux vidéo.
 Il capture le texte à l'écran (dialogues, sous-titres), le nettoie et le lit instantanément avec une voix naturelle.
 
 ## ✨ Fonctionnalités
@@ -30,6 +30,7 @@ sudo pacman -S tesseract tesseract-data-fra grim slurp paplay python
     git clone https://github.com/Djkawada/GameReader.git
     cd GameReader
     ```
+    *(Note: Le nom du dépôt GitHub sera mis à jour prochainement)*
 
 2.  **Environnement Python** :
     ```bash
@@ -56,20 +57,21 @@ sudo pacman -S tesseract tesseract-data-fra grim slurp paplay python
     sudo ./venv/bin/python find_button.py
     ```
 2.  Notez le chemin `/dev/input/eventXX` et le code du bouton.
-3.  Modifiez les constantes au début de `game_reader.py`.
+3.  Modifiez les constantes au début de `gamevox.py`.
 
 ## 🛠️ Utilisation
 
 Lancez le script :
 ```bash
 # Sudo est requis uniquement pour l'écoute de la manette
-sudo ./venv/bin/python game_reader.py
+sudo ./venv/bin/python gamevox.py
 ```
 
 ### Menu de démarrage :
 *   **Mode Auto** : Scanne la moitié inférieure de l'écran actif.
 *   **Sélectionner un Profil** : Charge une zone déjà enregistrée.
 *   **Créer un nouveau profil** : Demande un nom, puis vous permet de dessiner un rectangle à l'écran avec la souris.
+*   **Supprimer un profil** : Efface un profil existant.
 
 ## ⌨️ Raccourcis
 *   **Bouton Manette** : Play / Pause (vocalise l'état).

@@ -232,7 +232,7 @@ def speak(text):
             # Les pipes causent trop de problèmes aléatoires avec mpv/aplay/paplay
             # Piper est tellement rapide que l'écriture disque est négligeable
             
-            filename = f"/tmp/gamereader_{int(time.time())}_{threading.get_ident()}.wav"
+            filename = f"/tmp/gamevox_{int(time.time())}_{threading.get_ident()}.wav"
             
             # 1. Générer le fichier WAV avec Piper
             with open(filename, 'wb') as f:
@@ -258,7 +258,7 @@ def speak(text):
     threading.Thread(target=_speak_thread, args=(text,), daemon=True).start()
 
 def main():
-    print("=== GAMEREADER AVEC MANETTE ===", flush=True)
+    print("=== GAMEVOX AVEC MANETTE ===", flush=True)
     
     choose_profile_menu()
     
