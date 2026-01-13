@@ -1,70 +1,76 @@
 # GameReader 🎮🗣️
 
-Un lecteur d'écran automatique pour Linux (Hyprland/Wayland) conçu pour les jeux vidéo.
-Il capture automatiquement la moitié inférieure de l'écran, détecte le texte (dialogues, sous-titres) et le lit à voix haute.
+Un lecteur d'écran intelligent pour Linux (**Hyprland/Wayland**) conçu pour les jeux vidéo. 
+Il capture le texte à l'écran (dialogues, sous-titres), le nettoie et le lit instantanément avec une voix naturelle.
 
-**Nouvelle fonctionnalité :** Supporte l'activation/désactivation via une manette de jeu !
+## ✨ Fonctionnalités
 
-## Prérequis
+*   **Voix Naturelle Locale** : Utilise l'IA **Piper** pour une synthèse vocale neuronale fluide sans aucun délai et sans connexion internet.
+*   **Sélection de Zone (Slurp)** : Définissez précisément la zone de l'écran à lire (ex: la boîte de dialogue) pour éviter les lectures inutiles.
+*   **Système de Profils** : Sauvegardez et chargez des zones spécifiques pour chaque jeu.
+*   **Nettoyage Intelligent** : Filtre les caractères spéciaux de l'OCR tout en conservant les lettres et les chiffres.
+*   **Contrôle à la Manette** : Activez/Désactivez la lecture à tout moment via un bouton de votre manette.
 
-Ce logiciel est conçu pour fonctionner sous **Linux** avec l'environnement graphique **Hyprland** (Wayland).
+## 📋 Prérequis
 
-Il nécessite les paquets systèmes suivants :
-*   `python`
-*   `tesseract` (et les données de langue, ex: `tesseract-data-fra`)
-*   `grim` (capture d'écran Wayland)
-*   `espeak-ng` (synthèse vocale)
-*   `libevdev` (pour la manette)
+Système : **Wayland** (testé sur Hyprland).
 
-Sous Arch Linux / Omarchy :
+Paquets nécessaires :
 ```bash
-sudo pacman -S tesseract tesseract-data-fra espeak-ng grim python libevdev
+sudo pacman -S tesseract tesseract-data-fra grim slurp paplay python
 ```
+*   `tesseract` : Moteur OCR.
+*   `grim` & `slurp` : Capture de zone.
+*   `paplay` : Lecture audio (standard PulseAudio/PipeWire).
 
-## Installation
+## 🚀 Installation
 
-1. Clonez ce dépôt :
-   ```bash
-   git clone https://github.com/Djkawada/GameReader.git
-   cd GameReader
-   ```
+1.  **Cloner le dépôt** :
+    ```bash
+    git clone https://github.com/Djkawada/GameReader.git
+    cd GameReader
+    ```
 
-2. Créez un environnement virtuel et installez les dépendances :
-   ```bash
-   python -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
+2.  **Environnement Python** :
+    ```bash
+    python -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+    ```
 
-## Configuration de la manette
+3.  **Installer Piper (TTS)** :
+    Le moteur vocal n'est pas inclus (trop lourd). Pour l'installer automatiquement :
+    ```bash
+    mkdir -p piper_tts && cd piper_tts
+    wget https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_x86_64.tar.gz
+    tar -xvf piper_linux_x86_64.tar.gz
+    wget https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/fr/fr_FR/upmc/medium/fr_FR-upmc-medium.onnx
+    wget https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/fr/fr_FR/upmc/medium/fr_FR-upmc-medium.onnx.json
+    cd ..
+    ```
 
-Pour utiliser le bouton de votre manette pour mettre en pause/lecture :
+## 🎮 Configuration de la manette
 
-1. Lancez l'outil de détection (avec sudo pour accéder aux périphériques) :
-   ```bash
-   sudo ./venv/bin/python find_button.py
-   ```
-2. Suivez les instructions, appuyez sur votre bouton et notez le **Code** affiché (ex: 304, 314).
-3. Ouvrez `game_reader.py` et modifiez les lignes :
-   ```python
-   CONTROLLER_PATH = '/dev/input/eventXX' # Chemin de votre manette
-   TOGGLE_BUTTON_CODE = 314               # Votre code
-   ```
+1.  Identifiez votre bouton :
+    ```bash
+    sudo ./venv/bin/python find_button.py
+    ```
+2.  Notez le chemin `/dev/input/eventXX` et le code du bouton.
+3.  Modifiez les constantes au début de `game_reader.py`.
 
-## Utilisation
+## 🛠️ Utilisation
 
-Lancez le logiciel (avec sudo si vous utilisez la manette) :
-
+Lancez le script :
 ```bash
+# Sudo est requis uniquement pour l'écoute de la manette
 sudo ./venv/bin/python game_reader.py
 ```
 
-*   **Lecture automatique** : Le logiciel lit tout texte apparaissant dans la moitié inférieure.
-*   **Bouton Manette** : Appuyez pour mettre en pause ou réactiver la lecture.
-*   `Ctrl+C` dans le terminal pour quitter.
+### Menu de démarrage :
+*   **Mode Auto** : Scanne la moitié inférieure de l'écran actif.
+*   **Sélectionner un Profil** : Charge une zone déjà enregistrée.
+*   **Créer un nouveau profil** : Demande un nom, puis vous permet de dessiner un rectangle à l'écran avec la souris.
 
-## Personnalisation
-
-Vous pouvez modifier les variables dans `game_reader.py` :
-*   `CHECK_INTERVAL` : La fréquence de lecture.
-*   `LANG` : La langue à détecter (par défaut 'fra').
+## ⌨️ Raccourcis
+*   **Bouton Manette** : Play / Pause (vocalise l'état).
+*   **Ctrl + C** : Quitter proprement.
