@@ -64,31 +64,45 @@ def save_config(path, code):
 
 def detect_controller_button():
     print("\n--- DÉTECTION MANETTE ---")
-    devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
-    if not devices:
-        print("Aucun périphérique d'entrée détecté.")
-        return None, None
-    
-    for i, dev in enumerate(devices):
-        print(f"{i}. {dev.name} ({dev.path})")
-    
     try:
-        idx = int(input("Choisissez le numéro de votre manette : "))
+        devices = []
+        for path in evdev.list_devices():
+            try:
+                devices.append(evdev.InputDevice(path))
+            except (PermissionError, OSError):
+                # On ignore les périphériques inaccessibles sans crash
+                pass
+                
+        if not devices:
+            print("\nAucun périphérique d'entrée accessible détecté.")
+            print("Note: Vous devez probablement lancer GameVox avec 'sudo' ou")
+            print("ajouter votre utilisateur au groupe 'input'.")
+            return None, None
+        
+        for i, dev in enumerate(devices):
+            print(f"{i}. {dev.name} ({dev.path})")
+        
+        choice_input = input("\nChoisissez le numéro de votre manette (ou 'q' pour annuler) : ").strip()
+        if choice_input.lower() == 'q':
+            return None, None
+            
+        idx = int(choice_input)
         if idx < 0 or idx >= len(devices):
             print("Numéro invalide.")
             return None, None
             
         device = devices[idx]
-        print(f"Appuyez sur le bouton souhaité sur {device.name}...")
+        print(f"\n>>> Appuyez sur le bouton souhaité sur {device.name}...")
         
         for event in device.read_loop():
             if event.type == evdev.ecodes.EV_KEY and event.value == 1: # 1 = pressé
-                print(f"Bouton détecté : {event.code}")
+                print(f"Bouton détecté ! Code : {event.code}")
                 return device.path, event.code
     except KeyboardInterrupt:
+        print("\nDétection annulée.")
         return None, None
     except Exception as e:
-        print(f"Erreur : {e}")
+        print(f"Erreur lors de la détection : {e}")
         return None, None
 
 def load_profiles():
