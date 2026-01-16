@@ -1,5 +1,11 @@
 # GameVox 🎮🗣️
 
+![Version](https://img.shields.io/github/v/release/Djkawada/GameVox?include_prereleases&style=flat-square)
+![License](https://img.shields.io/github/license/Djkawada/GameVox?style=flat-square)
+![Downloads](https://img.shields.io/github/downloads/Djkawada/GameVox/total?style=flat-square)
+![Repo Size](https://img.shields.io/github/repo-size/Djkawada/GameVox?style=flat-square)
+
+
 **GameVox** est un lecteur d'écran intelligent pour Linux (**Hyprland/Wayland**) conçu pour les jeux vidéo.
 Il capture le texte à l'écran (dialogues, sous-titres), le nettoie et le lit instantanément avec une voix naturelle.
 
