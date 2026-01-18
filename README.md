@@ -1,10 +1,5 @@
 # GameVox 🎮🗣️
 
-![Version](https://img.shields.io/github/v/release/Djkawada/GameVox?include_prereleases&style=flat-square)
-![License](https://img.shields.io/github/license/Djkawada/GameVox?style=flat-square)
-![Downloads](https://img.shields.io/github/downloads/Djkawada/GameVox/total?style=flat-square)
-
-
 **GameVox** est un lecteur d'écran intelligent pour Linux (**Hyprland/Wayland**) conçu pour les jeux vidéo.
 Il capture le texte à l'écran (dialogues, sous-titres), le nettoie et le lit instantanément avec une voix naturelle.
 
@@ -14,7 +9,9 @@ Il capture le texte à l'écran (dialogues, sous-titres), le nettoie et le lit i
 *   **Sélection de Zone (Slurp)** : Définissez précisément la zone de l'écran à lire (ex: la boîte de dialogue) pour éviter les lectures inutiles.
 *   **Système de Profils** : Sauvegardez et chargez des zones spécifiques pour chaque jeu.
 *   **Nettoyage Intelligent** : Filtre les caractères spéciaux de l'OCR tout en conservant les lettres et les chiffres.
-*   **Contrôle à la Manette** : Activez/Désactivez la lecture à tout moment via un bouton de votre manette (configurable dynamiquement).
+*   **Contrôle Flexible** :
+    *   **Manette** : Appuyez sur un bouton (configurable) pour Play/Pause.
+    *   **Clavier** : Appuyez sur une touche (configurable, 'p' par défaut) dans le terminal.
 
 ## 🚀 Installation
 
@@ -69,7 +66,8 @@ gamevox
 *   **Sélectionner un Profil** : Charge une zone déjà enregistrée.
 *   **Créer un nouveau profil** : Demande un nom, puis vous permet de dessiner un rectangle à l'écran avec la souris.
 *   **Configurer la manette** : Détecte automatiquement votre manette et le bouton de pause souhaité.
+*   **Configurer le clavier** : Choisissez la touche (ex: 'p', 'espace') pour contrôler la lecture depuis le terminal.
 
 ## 🎮 Contrôles
-*   **Bouton Manette** : Play / Pause (vocalise l'état).
+*   **Bouton Manette / Touche Clavier** : Play / Pause (vocalise l'état).
 *   **Ctrl + C** : Quitter proprement.
